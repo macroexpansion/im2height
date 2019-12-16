@@ -4,7 +4,7 @@ import torch.optim as optim
 from model.helper.utils import EarlyStopping, Logger
 from model.dataloader import trainloader, validloader
 import time
-# from tqdm import tqdm
+from tqdm import tqdm
 from model.metric import ssim, SSIM
 from torch.utils.tensorboard import SummaryWriter
 
@@ -25,12 +25,12 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
 
     train_writer = SummaryWriter(log_dir='logs-tensorboard/train')
     val_writer = SummaryWriter(log_dir='logs-tensorboard/val')
-    es = EarlyStopping(mode='min', patience=10)
+    es = EarlyStopping(mode='max', patience=10)
 
     criterion = nn.L1Loss()
     optimizer = optim.Adam(net.parameters(), lr=learning_rate)
 
-    best_loss = 0.0
+    best_ssim = 0.0
     for epoch in range(num_epochs):
         start = time.time()
         print("Epoch {}/{}".format(epoch, num_epochs))
@@ -59,8 +59,8 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
                         loss.backward()
                         optimizer.step()
 
-                running_loss += loss.item()
-                running_ssim += ssim_value.item()
+                running_loss += loss.item() * image.size(0)
+                running_ssim += ssim_value.item() * image.size(0)
 
                 del image, mask, output
                 torch.cuda.empty_cache()
@@ -80,17 +80,17 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
                 val_writer.add_scalar('L1Loss', epoch_loss, epoch)
                 val_writer.add_scalar('SSIM', epoch_ssim, epoch)
 
-                mae_loss = epoch_loss
-                if es.step(mae_loss):
+                # ssim = epoch_ssim
+                if es.step(epoch_ssim):
                     time_elapsed = time.time() - since
                     print('Early Stopping')
                     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
-                    print('Best val loss: {:4f}'.format(best_loss))
+                    print('Best val ssim: {:4f}'.format(best_ssim))
                     return
 
-                if epoch_loss < best_loss:
-                    best_loss = epoch_loss
-                    print('Update best loss: {:4f}'.format(best_loss))
+                if epoch_ssim < best_ssim:
+                    best_ssim = epoch_ssim
+                    print('Update best loss: {:4f}'.format(best_ssim))
                     torch.save(net.state_dict(), '{}.pt'.format(model_name))
                 
 
