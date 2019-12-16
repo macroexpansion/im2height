@@ -10,4 +10,4 @@ dataloader = {
 }
 
 net = IM2HI()
-train(net, dataloader,learning_rate=1e-4, colab=colab)
+train(net, dataloader,learning_rate=1e-4)

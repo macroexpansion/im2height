@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import imgaug as ia
 from imgaug import augmenters as iaa
+from datetime import datetime, date
+import os, glob, shutil
 mpl.rcParams['axes.grid'] = False
 mpl.rcParams['image.interpolation'] = 'nearest'
 mpl.rcParams['figure.figsize'] = 5, 10
@@ -43,32 +45,33 @@ def show_dataset(dataset, n=6):
 
 
 class ImgAugmenter:
-  def __init__(self):
-    self.aug = iaa.Sequential([
-        iaa.Sometimes(0.4, iaa.GaussianBlur(sigma=(0, 3.0))),
-        iaa.Sometimes(0.3, iaa.OneOf([iaa.Dropout(p=(0, 0.1)), iaa.CoarseDropout(0.1, size_percent=0.5)])),
-        iaa.AddToHueAndSaturation(value=(-10, 10), per_channel=True)
-    ])
-      
-  def __call__(self, img):
-    img = np.array(img)
-    return self.aug.augment_image(img)
+    def __init__(self):
+        self.aug = iaa.Sequential([
+            iaa.Sometimes(0.4, iaa.GaussianBlur(sigma=(0, 3.0))),
+            iaa.Sometimes(0.3, iaa.OneOf([iaa.Dropout(p=(0, 0.1)), iaa.CoarseDropout(0.1, size_percent=0.5)])),
+            iaa.AddToHueAndSaturation(value=(-10, 10), per_channel=True)
+        ])
+        
+    def __call__(self, img):
+        img = np.array(img)
+        return self.aug.augment_image(img)
 
 
 class Logger(object):
     """ Simple training logger: saves to file and optionally prints to stdout """
-    def __init__(self, logname, now):
+    def __init__(self, logname):
         """
         Args:
             logname: name for log (e.g. 'Hopper-v1')
             now: unique sub-directory name (e.g. date/time string)
         """
+        now = date.today().strftime('%d-%m-%Y_') + datetime.now().strftime('%H:%M:%S')
         path = os.path.join('log-files', logname, now)
         os.makedirs(path)
-        folders = [('','*.py')]
-        filenames = glob.glob('*.py')  # put copy of all python files in log_dir
+        folders = [('','*.py'), ('model', '*.py')]
+        # put copy of all python files in log_dir
         for folder, query in folders:
-            filenames = glob.glob(folder + query)
+            filenames = glob.glob(os.path.join(folder, query))
             path_ = os.path.join(path, folder)
             if not os.path.exists(path_): os.makedirs(path_)
             for filename in filenames:     # for reference

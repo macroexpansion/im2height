@@ -4,12 +4,14 @@ import torch.optim as optim
 from model.helper.utils import EarlyStopping, Logger
 from model.dataloader import trainloader, validloader
 import time
-from tqdm import tqdm
+# from tqdm import tqdm
 from model.metric import ssim, SSIM
 from torch.utils.tensorboard import SummaryWriter
 
 
 def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate=1e-4):
+    logger = Logger('im2hi')
+    
     use_gpu = torch.cuda.is_available()
     device  = 'cuda:0' if use_gpu else 'cpu'
     if use_gpu:
@@ -18,17 +20,17 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
     
     train_size = len(dataloader['train'])
     valid_size = len(dataloader['val'])
-    
-    criterion = nn.L1Loss()
-    optimizer = optim.Adam(net.parameters(), lr=learning_rate)
+
+    since = time.time()
 
     train_writer = SummaryWriter(log_dir='logs-tensorboard/train')
     val_writer = SummaryWriter(log_dir='logs-tensorboard/val')
     es = EarlyStopping(mode='min', patience=10)
-    since = time.time()
+
+    criterion = nn.L1Loss()
+    optimizer = optim.Adam(net.parameters(), lr=learning_rate)
 
     best_loss = 0.0
-
     for epoch in range(num_epochs):
         start = time.time()
         print("Epoch {}/{}".format(epoch, num_epochs))
@@ -78,7 +80,7 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
                 val_writer.add_scalar('L1Loss', epoch_loss, epoch)
                 val_writer.add_scalar('SSIM', epoch_ssim, epoch)
 
-                mae_loss = epoch_loss.cpu()
+                mae_loss = epoch_loss
                 if es.step(mae_loss):
                     time_elapsed = time.time() - since
                     print('Early Stopping')
