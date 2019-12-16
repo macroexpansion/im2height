@@ -60,7 +60,7 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
                         optimizer.step()
 
                 running_loss += loss.item() * image.size(0)
-                running_ssim += ssim_value.item() * image.size(0)
+                running_ssim += ssim_value.item()
 
                 del image, mask, output
                 torch.cuda.empty_cache()
@@ -88,7 +88,7 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
                     print('Best val ssim: {:4f}'.format(best_ssim))
                     return
 
-                if epoch_ssim < best_ssim:
+                if epoch_ssim > best_ssim:
                     best_ssim = epoch_ssim
                     print('Update best loss: {:4f}'.format(best_ssim))
                     torch.save(net.state_dict(), '{}.pt'.format(model_name))

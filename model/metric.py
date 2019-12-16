@@ -71,3 +71,11 @@ def ssim(img1, img2, window_size = 11, size_average = True):
     window = window.type_as(img1)
     
     return _ssim(img1, img2, window, window_size, channel, size_average)
+
+
+if __name__ == '__main__':
+    i1 = torch.rand(16,1,256,256)
+    i2 = torch.rand(16,1,256,256)
+
+    loss = ssim(i1,i1)
+    print(loss.item())
