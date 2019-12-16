@@ -10,7 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 def train(net, num_epochs=100, model_name='im2height', learning_rate=1e-4, colab=False):
     use_gpu = torch.cuda.is_available()
-    device  = 'gpu:0' if use_gpu else 'cpu'
+    device  = 'cuda:0' if use_gpu else 'cpu'
     if use_gpu:
         print('Using CUDA')
         net.cuda()
@@ -60,7 +60,7 @@ def train(net, num_epochs=100, model_name='im2height', learning_rate=1e-4, colab
                 running_loss += loss.item()
                 running_ssim += ssim_value.item()
 
-                del image, label, output
+                del image, mask, output
                 torch.cuda.empty_cache()
 
             data_size = train_size if phase == 'train' else valid_size

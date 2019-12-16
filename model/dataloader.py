@@ -38,23 +38,6 @@ def dataplot(y_train, y_test):
     plt.show()
 
 
-def train_valid_split(dataset, valid_split_size=0.2, shuffle=True, random_seed=7):
-    dataset_size = len(dataset)
-    indices = list(range(dataset_size))
-    split = int(np.floor(valid_split_size * dataset_size))
-
-    if shuffle:
-        np.random.seed(random_seed)
-        np.random.shuffle(indices)
-    
-    train_indices, valid_indices = indices[split:], indices[:split]
-    # print(train_indices)
-    train_sampler = SubsetRandomSampler(train_indices)
-    valid_sampler = SubsetRandomSampler(valid_indices)
-
-    return train_sampler, len(train_indices), valid_sampler, len(valid_indices)
-
-
 class RemoteImageDataset(Dataset):
     def __init__(self, root, transform=None):
         self.dataset_path = root
@@ -65,6 +48,7 @@ class RemoteImageDataset(Dataset):
                            if os.path.isfile(os.path.join(self.image_dir, f))]
         self.mask_list = [f for f in os.listdir(self.mask_dir)
                           if os.path.isfile(os.path.join(self.mask_dir, f))]
+        self.grayscale = transforms.Grayscale()
         
     
     def __getitem__(self, index):
@@ -73,8 +57,7 @@ class RemoteImageDataset(Dataset):
         mask_file = os.path.join(self.mask_dir, image_name) if os.path.isfile(os.path.join(self.mask_dir, image_name)) else None
 
         img = Image.open(image_file)
-        mask = Image.open(mask_file)
-        print(image_file, mask_file)
+        mask = self.grayscale(Image.open(mask_file))
         
         if self.transform:
             img = self.transform(img)
@@ -85,7 +68,6 @@ class RemoteImageDataset(Dataset):
     def __len__(self):
         return len(self.image_list) 
         
-
 
 def trainloader(colab=False, batch_size=1, transform=transforms.ToTensor()):
     path = 'datasets/256-256-train/'
