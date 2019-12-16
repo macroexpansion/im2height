@@ -15,10 +15,10 @@ def train(net, num_epochs=100, model_name='im2height', learning_rate=1e-4):
         print('Using CUDA')
         net.cuda()
 
-    dataloader = {'train': trainloader, 'val': validloader}
+    dataloader = {'train': trainloader(), 'val': validloader()}
     train_size = len(dataloader['train'])
     valid_size = len(dataloader['val'])
-
+    
     criterion = nn.L1Loss()
     optimizer = optim.Adam(net.parameters(), lr=learning_rate)
 
