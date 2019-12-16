@@ -4,18 +4,18 @@ import torch.optim as optim
 from model.helper.utils import EarlyStopping, Logger
 from model.dataloader import trainloader, validloader
 import time
+from tqdm import tqdm
 from model.metric import ssim, SSIM
 from torch.utils.tensorboard import SummaryWriter
 
 
-def train(net, num_epochs=100, model_name='im2height', learning_rate=1e-4, colab=False):
+def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate=1e-4):
     use_gpu = torch.cuda.is_available()
     device  = 'cuda:0' if use_gpu else 'cpu'
     if use_gpu:
         print('Using CUDA')
         net.cuda()
-
-    dataloader = {'train': trainloader(colab=colab), 'val': validloader(colab=colab)}
+    
     train_size = len(dataloader['train'])
     valid_size = len(dataloader['val'])
     
@@ -43,7 +43,7 @@ def train(net, num_epochs=100, model_name='im2height', learning_rate=1e-4, colab
             running_loss = 0.0
             running_ssim = 0.0
 
-            for image, mask in dataloader[phase]:
+            for image, mask in tqdm(dataloader[phase]):
                 image = image.to(device)
                 mask = mask.to(device)
 
@@ -67,7 +67,7 @@ def train(net, num_epochs=100, model_name='im2height', learning_rate=1e-4, colab
             epoch_loss = running_loss / data_size
             epoch_ssim = running_ssim / data_size
 
-            print('{} -> Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
+            print('{} -> Loss: {:.4f} SSIM: {:.4f}'.format(phase, epoch_loss, epoch_ssim))
             print('\ttime', time.time() - start)
 
             if phase == 'train':

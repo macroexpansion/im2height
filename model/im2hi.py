@@ -59,7 +59,7 @@ class ResidualBlock(nn.Module):
         self.residual = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
         
         self.features = nn.Sequential(
-            nn.BatchNorm2d(out_channels, affine=False),
+            # nn.BatchNorm2d(out_channels, affine=False),
             nn.ReLU(),
             nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
             # nn.BatchNorm2d(out_channels, affine=False),
