@@ -93,7 +93,7 @@ def trainloader(colab=False, batch_size=1, transform=transforms.ToTensor()):
         path = '../drive/My Drive/Colab Notebooks/DATA/256-256-train/'
 
     train_data = RemoteImageDataset(root=path, transform=transform)
-    train_loader = DataLoader(train_data, batch_size=batch_size)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
     return train_loader
 
@@ -114,7 +114,7 @@ def testloader(colab=False, batch_size=1, transform=transforms.ToTensor()):
     if colab:
         path = '../drive/My Drive/Colab Notebooks/DATA/256-256-test/'
 
-    test_data = ImageFolder(root=path, transform=transform)
+    test_data = RemoteImageDataset(root=path, transform=transform)
     test_loader = DataLoader(test_data, batch_size=batch_size)
 
     return test_loader

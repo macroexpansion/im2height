@@ -8,7 +8,7 @@ from metric import ssim, SSIM
 from torch.utils.tensorboard import SummaryWriter
 
 
-def train(net, num_epochs=100, model_name='im2height'):
+def train(net, num_epochs=100, model_name='im2height', learning_rate=1e-4):
     use_gpu = torch.cuda.is_available()
     device  = 'gpu:0' if use_gpu else 'cpu'
     if use_gpu:
@@ -20,7 +20,7 @@ def train(net, num_epochs=100, model_name='im2height'):
     valid_size = len(dataloader['val'])
 
     criterion = nn.L1Loss()
-    optimizer = optim.Adam(net.parameters(), lr=2e-5)
+    optimizer = optim.Adam(net.parameters(), lr=learning_rate)
 
     train_writer = SummaryWriter(log_dir='logs-tensorboard/train')
     val_writer = SummaryWriter(log_dir='logs-tensorboard/val')
