@@ -8,14 +8,14 @@ from model.metric import ssim, SSIM
 from torch.utils.tensorboard import SummaryWriter
 
 
-def train(net, num_epochs=100, model_name='im2height', learning_rate=1e-4):
+def train(net, num_epochs=100, model_name='im2height', learning_rate=1e-4, colab=False):
     use_gpu = torch.cuda.is_available()
     device  = 'gpu:0' if use_gpu else 'cpu'
     if use_gpu:
         print('Using CUDA')
         net.cuda()
 
-    dataloader = {'train': trainloader(), 'val': validloader()}
+    dataloader = {'train': trainloader(colab=colab), 'val': validloader(colab=colab)}
     train_size = len(dataloader['train'])
     valid_size = len(dataloader['val'])
     
