@@ -62,11 +62,12 @@ class RemoteImageDataset(Dataset):
         mask = Image.open(mask_file)
         mask = self.grayscale(mask)
         
+        img = self.totensor(img)
+        mask = self.totensor(mask)
+        
         if self.augment:
             return augmentor(img, mask)
 
-        img = self.totensor(img)
-        mask = self.totensor(mask)
         return img, mask
     
     def __len__(self):
