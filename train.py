@@ -1,13 +1,19 @@
-from model.train import train
+# from model.train import train
 from model.im2hi import IM2HI
 from model.dataloader import trainloader, validloader
+from torchvision import transforms
 
-colab = True
-batch_size = 64
+
+COLAB = True
+BATCH_SIZE = 64
+AUGMENT = False
+
 dataloader = {
-    'train': trainloader(colab=colab, batch_size=batch_size), 
-    'val': validloader(colab=colab, batch_size=batch_size)
+    'train': trainloader(colab=COLAB, batch_size=BATCH_SIZE, transform=AUGMENT), 
+    'val': validloader(colab=COLAB, batch_size=BATCH_SIZE)
 }
 
 net = IM2HI()
-train(net, dataloader,learning_rate=1e-4)
+# print(net)
+# print(net.parameters())
+train(net, dataloader, learning_rate=1e-4, model_name='im2height')

@@ -6,11 +6,9 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split
 from torchvision.datasets import ImageFolder
 from torchvision import transforms
-import torchvision.transforms.functional as tfunc
 from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import DataLoader, Dataset
 import torch
-import random
 from PIL import Image
 
 
@@ -41,7 +39,7 @@ def dataplot(y_train, y_test):
 
 
 class RemoteImageDataset(Dataset):
-    def __init__(self, root, transform=False):
+    def __init__(self, root, transform=None):
         self.dataset_path = root
         self.transform = transform
         self.image_dir = os.path.join(self.dataset_path, 'img')
@@ -51,7 +49,7 @@ class RemoteImageDataset(Dataset):
         self.mask_list = [f for f in os.listdir(self.mask_dir)
                           if os.path.isfile(os.path.join(self.mask_dir, f))]
         self.grayscale = transforms.Grayscale()
-        self.totensor = transforms.ToTensor()
+        
     
     def __getitem__(self, index):
         image_name = self.image_list[index]
@@ -59,35 +57,19 @@ class RemoteImageDataset(Dataset):
         mask_file = os.path.join(self.mask_dir, image_name) if os.path.isfile(os.path.join(self.mask_dir, image_name)) else None
 
         img = Image.open(image_file)
-        mask = Image.open(mask_file)
-        # mask = self.grayscale(mask)
+        mask = self.grayscale(Image.open(mask_file))
         
         if self.transform:
-            return transforms(img, mask)
-
-        img = self.totensor(img)
-        mask = self.totensor(mask)
+            img = self.transform(img)
+            mask = self.transform(mask)
+        
         return img, mask
     
     def __len__(self):
-        return len(self.image_list)
+        return len(self.image_list) 
+        
 
-
-def transforms(img, mask):
-    if random.random() >= 0.5:
-        img = tfunc.hflip(img)
-        mask = tfunc.hflip(mask)
-
-    if random.random() >= 0.5:
-        img = tfunc.vflip(img)
-        mask = tfunc.vflip(mask)
-
-    img = tfunc.to_tensor(img)
-    mask = tfunc.to_tensor(mask)
-
-    return img, mask
-
-def trainloader(colab=False, batch_size=1, transform=False):
+def trainloader(colab=False, batch_size=1, transform=transforms.ToTensor()):
     path = 'datasets/256-256-train/'
     if colab:
         path = '../drive/My Drive/Colab Notebooks/DATA/256-256-train/'
@@ -98,7 +80,7 @@ def trainloader(colab=False, batch_size=1, transform=False):
     return train_loader
 
 
-def validloader(colab=False, batch_size=1, transform=False):
+def validloader(colab=False, batch_size=1, transform=transforms.ToTensor()):
     path = 'datasets/256-256-val'
     if colab:
         path = '../drive/My Drive/Colab Notebooks/DATA/256-256-val/'
@@ -109,7 +91,7 @@ def validloader(colab=False, batch_size=1, transform=False):
     return val_loader
 
 
-def testloader(colab=False, batch_size=1, transform=False):
+def testloader(colab=False, batch_size=1, transform=transforms.ToTensor()):
     path = 'datasets/256-256-test'
     if colab:
         path = '../drive/My Drive/Colab Notebooks/DATA/256-256-test/'
@@ -122,24 +104,16 @@ def testloader(colab=False, batch_size=1, transform=False):
 
 if __name__ == '__main__':
     transform = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
         transforms.ToTensor()
     ])
 
-    data = trainloader()
-    for img, mask in iter(data):
-        # print(img.reshape())
-        imgs = transform(img.reshape(3,256,256)).permute(1,2,0)
-        masks = transform(mask.reshape(3,256,256)).permute(1,2,0)
-        img = img.permute(0,2,3,1).reshape(256,256,3)
-        mask = mask.permute(0,2,3,1).reshape(256,256,3)
-        fig, (ax1, ax2,a3,a4) = plt.subplots(1,4, figsize=(8,3))
-        ax1.imshow(img)
-        ax2.imshow(mask)
-        a3.imshow(imgs)
-        a4.imshow(masks)
-
-        plt.show()
-        break
+    # dataset = RemoteImageDataset(root='datasets/256-256-train/', transform=transform)
+    # print(len(dataset))
+    dataset = validloader()
+    print(len(dataset))
+    # dataset = iter(dataset)
+    # dataset = dataset.next()
+    # img = dataset[0]
+    # mask = dataset[1]
+    # plt.imshow(img.reshape(3,256,256).permute(1,2,0))
+    # plt.show()
