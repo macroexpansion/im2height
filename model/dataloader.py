@@ -85,6 +85,10 @@ def augmentor(img, mask):
         img = tfunc.vflip(img)
         mask = tfunc.vflip(mask)
 
+    if random.random() >= 0.5:
+        img = tfunc.rotate(img, 90)
+        mask = tfunc.rotate(mask, 90)
+
     img = tfunc.to_tensor(img)
     mask = tfunc.to_tensor(mask)
 
