@@ -9,9 +9,7 @@ from model.metric import ssim, SSIM
 from torch.utils.tensorboard import SummaryWriter
 
 
-def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate=1e-4):
-    
-    
+def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate=1e-4, comment='comment'):
     use_gpu = torch.cuda.is_available()
     device  = 'cuda:0' if use_gpu else 'cpu'
     if use_gpu:
@@ -23,8 +21,8 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
 
     since = time.time()
 
-    train_writer = SummaryWriter(log_dir='logs-tensorboard/train')
-    val_writer = SummaryWriter(log_dir='logs-tensorboard/val')
+    train_writer = SummaryWriter(log_dir='logs-tensorboard/train', comment='-'+comment)
+    val_writer = SummaryWriter(log_dir='logs-tensorboard/val', comment='-'+comment)
     es = EarlyStopping(mode='max', patience=10)
 
     criterion = nn.L1Loss()
