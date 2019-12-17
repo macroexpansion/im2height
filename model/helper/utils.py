@@ -59,14 +59,14 @@ class ImgAugmenter:
 
 class Logger(object):
     """ Simple training logger: saves to file and optionally prints to stdout """
-    def __init__(self, logname):
+    def __init__(self, logname, comment=''):
         """
         Args:
             logname: name for log (e.g. 'Hopper-v1')
             now: unique sub-directory name (e.g. date/time string)
         """
         now = date.today().strftime('%d-%m-%Y_') + datetime.now().strftime('%H:%M:%S')
-        path = os.path.join('log-files', logname, now)
+        path = os.path.join('log-files', logname, now + '_' + comment)
         os.makedirs(path)
         folders = [('','*.py'), ('model', '*.py')]
         # put copy of all python files in log_dir

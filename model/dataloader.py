@@ -41,9 +41,9 @@ def dataplot(y_train, y_test):
 
 
 class RemoteImageDataset(Dataset):
-    def __init__(self, root, transform=False):
+    def __init__(self, root, augment=False):
         self.dataset_path = root
-        self.transform = transform
+        self.augment = augment
         self.image_dir = os.path.join(self.dataset_path, 'img')
         self.mask_dir = os.path.join(self.dataset_path, 'mask')
         self.image_list = [f for f in os.listdir(self.image_dir) 
@@ -60,10 +60,10 @@ class RemoteImageDataset(Dataset):
 
         img = Image.open(image_file)
         mask = Image.open(mask_file)
-        # mask = self.grayscale(mask)
+        mask = self.grayscale(mask)
         
-        if self.transform:
-            return transforms(img, mask)
+        if self.augment:
+            return augmentor(img, mask)
 
         img = self.totensor(img)
         mask = self.totensor(mask)
@@ -73,7 +73,10 @@ class RemoteImageDataset(Dataset):
         return len(self.image_list)
 
 
-def transforms(img, mask):
+def augmentor(img, mask):
+    img = tfunc.to_pil_image(img)
+    mask = tfunc.to_pil_image(mask)
+
     if random.random() >= 0.5:
         img = tfunc.hflip(img)
         mask = tfunc.hflip(mask)
@@ -87,59 +90,55 @@ def transforms(img, mask):
 
     return img, mask
 
-def trainloader(colab=False, batch_size=1, transform=False):
+def trainloader(colab=False, batch_size=1, augment=False):
     path = 'datasets/256-256-train/'
     if colab:
         path = '../drive/My Drive/Colab Notebooks/DATA/256-256-train/'
 
-    train_data = RemoteImageDataset(root=path, transform=transform)
+    train_data = RemoteImageDataset(root=path, augment=augment)
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
     return train_loader
 
 
-def validloader(colab=False, batch_size=1, transform=False):
+def validloader(colab=False, batch_size=1, augment=False):
     path = 'datasets/256-256-val'
     if colab:
         path = '../drive/My Drive/Colab Notebooks/DATA/256-256-val/'
 
-    val_data = RemoteImageDataset(root=path, transform=transform) 
+    val_data = RemoteImageDataset(root=path, augment=augment) 
     val_loader = DataLoader(val_data, batch_size=batch_size)
 
     return val_loader
 
 
-def testloader(colab=False, batch_size=1, transform=False):
+def testloader(colab=False, batch_size=1, augment=False):
     path = 'datasets/256-256-test'
     if colab:
         path = '../drive/My Drive/Colab Notebooks/DATA/256-256-test/'
 
-    test_data = RemoteImageDataset(root=path, transform=transform)
+    test_data = RemoteImageDataset(root=path, augment=augment)
     test_loader = DataLoader(test_data, batch_size=batch_size)
 
     return test_loader
 
 
 if __name__ == '__main__':
-    transform = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
-        transforms.ToTensor()
-    ])
 
-    data = trainloader()
+    data = trainloader(augment=False)
     for img, mask in iter(data):
         # print(img.reshape())
-        imgs = transform(img.reshape(3,256,256)).permute(1,2,0)
-        masks = transform(mask.reshape(3,256,256)).permute(1,2,0)
+        img_, mask_ = augmentor(img.reshape(3,256,256), mask.reshape(3,256,256))
+        img_ = img_.permute(1,2,0)
+        mask_ = mask_.permute(1,2,0)
         img = img.permute(0,2,3,1).reshape(256,256,3)
         mask = mask.permute(0,2,3,1).reshape(256,256,3)
+
         fig, (ax1, ax2,a3,a4) = plt.subplots(1,4, figsize=(8,3))
         ax1.imshow(img)
         ax2.imshow(mask)
-        a3.imshow(imgs)
-        a4.imshow(masks)
+        a3.imshow(img_)
+        a4.imshow(mask_)
 
         plt.show()
         break

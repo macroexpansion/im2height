@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from model.helper.utils import EarlyStopping, Logger
+from model.helper.utils import EarlyStopping
 from model.dataloader import trainloader, validloader
 import time
 from tqdm import tqdm
@@ -10,7 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate=1e-4):
-    logger = Logger('im2hi')
+    
     
     use_gpu = torch.cuda.is_available()
     device  = 'cuda:0' if use_gpu else 'cpu'
