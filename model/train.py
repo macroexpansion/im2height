@@ -7,7 +7,7 @@ import time
 from tqdm import tqdm
 from model.metric import ssim
 from torch.utils.tensorboard import SummaryWriter
-from datatime import datetime, date
+from datetime import datetime, date
 
 
 def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model_name='im2height', learning_rate=1e-4, comment='comment'):
@@ -58,12 +58,12 @@ def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model
                     
                     # m_loss += loss.item()
                     # m_ssim += ssim_value.item()
-                    if phase == 'train' and i % 20 == 0:
+                    if phase == 'train':
                         ssim_writer.add_scalar('loss %s' % str(epoch), loss.item(), i)
                         ssim_writer.add_scalar('ssim %s' % str(epoch), ssim_value.item(), i)
-                        m_loss, m_ssim = 0, 0
+                        # m_loss, m_ssim = 0, 0
                 
-                    if phase == 'train':
+                    # if phase == 'train':
                         loss.backward()
                         optimizer.step()
                 i += 1

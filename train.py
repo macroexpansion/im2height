@@ -19,16 +19,16 @@ dataloader = {
 }
 
 net = IM2HI()
-if torch.gpu.is_available(): 
+if torch.cuda.is_available(): 
     net.cuda()
 
-criterion = nn.L1Loss()
+criterion = torch.nn.L1Loss()
 # optimizer = optim.SGD(net.parameters(), 
                         # lr=LR, 
                         # momentum=0.9, 
                         # nesterov=True, 
                         # weight_decay=1e-1)
-optimizer = optim.Adam(net.parameters(), 
+optimizer = torch.optim.Adam(net.parameters(), 
                        lr=2e-5, 
                        weight_decay=1e-1)
 
