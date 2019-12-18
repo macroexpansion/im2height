@@ -11,6 +11,8 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import DataLoader, Dataset
 import torch
 import random
+from im2hi import IM2HI
+from metric import ssim
 from PIL import Image
 
 
@@ -60,6 +62,7 @@ class RemoteImageDataset(Dataset):
 
         img = Image.open(image_file)
         mask = Image.open(mask_file)
+        # mask.show()
         mask = self.grayscale(mask)
         
         img = self.totensor(img)
@@ -101,7 +104,7 @@ def trainloader(colab=False, batch_size=1, augment=False):
         path = '../drive/My Drive/Colab Notebooks/DATA/256-256-train/'
 
     train_data = RemoteImageDataset(root=path, augment=augment)
-    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=False)
 
     return train_loader
 
@@ -129,21 +132,46 @@ def testloader(colab=False, batch_size=1, augment=False):
 
 
 if __name__ == '__main__':
+    net = IM2HI()
+    net.load_state_dict(torch.load('im2height.pt', map_location=torch.device('cpu')))
+    net.eval()
 
-    data = trainloader(augment=False)
-    for img, mask in iter(data):
+    data = trainloader()
+    data = iter(data)
+    for i in range(14):
+        img, mask = data.next()
+
+    with torch.set_grad_enabled(False):
+        output = net(img)
+        print(ssim(output, mask))
+        print(torch.nn.L1Loss()(output, mask))
+        print(torch.nn.MSELoss()(output, mask))
+        output = torch.squeeze(output, 0)
+        output = torch.cat((output, output, output))
+
+    img, mask = torch.squeeze(img, 0), torch.squeeze(mask, 0)
+    mask = torch.cat((mask, mask, mask))
+
+    
+    fig, (a1, a2,a3) = plt.subplots(1,3, figsize=(15,5))
+    a1.imshow(img.permute(1,2,0))
+    a2.imshow(mask.permute(1,2,0))
+    a3.imshow(output.permute(1,2,0))
+    plt.show()
+
+    # for img, mask in iter(data):
         # print(img.reshape())
-        img_, mask_ = augmentor(img.reshape(3,256,256), mask.reshape(3,256,256))
-        img_ = img_.permute(1,2,0)
-        mask_ = mask_.permute(1,2,0)
-        img = img.permute(0,2,3,1).reshape(256,256,3)
-        mask = mask.permute(0,2,3,1).reshape(256,256,3)
+        # img_, mask_ = augmentor(img.reshape(3,256,256), mask.reshape(3,256,256))
+        # img_ = img_.permute(1,2,0)
+        # mask_ = mask_.permute(1,2,0)
+        # img = img.permute(0,2,3,1).reshape(256,256,3)
+        # mask = mask.permute(0,2,3,1).reshape(256,256,3)
 
-        fig, (ax1, ax2,a3,a4) = plt.subplots(1,4, figsize=(8,3))
-        ax1.imshow(img)
-        ax2.imshow(mask)
-        a3.imshow(img_)
-        a4.imshow(mask_)
+        # fig, (ax1, ax2,a3,a4) = plt.subplots(1,4, figsize=(8,3))
+        # ax1.imshow(img)
+        # ax2.imshow(mask)
+        # a3.imshow(img_)
+        # a4.imshow(mask_)
 
-        plt.show()
-        break
+        # plt.show()
+        # break

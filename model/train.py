@@ -17,8 +17,8 @@ def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model
         print('Using CUDA')
         # net.cuda()
     
-    train_size = len(dataloader['train'])
-    valid_size = len(dataloader['val'])
+    train_size = 2376
+    valid_size = 370
 
     since = time.time()
     now = date.today().strftime('%d-%m-%Y_') + datetime.now().strftime('%H:%M:%S')
@@ -67,8 +67,9 @@ def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model
                         loss.backward()
                         optimizer.step()
                 i += 1
+                # print(image.size(0))
                 running_loss += loss.item() * image.size(0)
-                running_ssim += ssim_value.item()
+                running_ssim += ssim_value.item() * image.size(0)
 
                 del image, mask, output
                 torch.cuda.empty_cache()

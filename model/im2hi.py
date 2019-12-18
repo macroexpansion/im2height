@@ -46,7 +46,9 @@ class IM2HI(nn.Module):
         x = self.block_7(F.max_unpool2d(x, idx_2, 2, stride=2))
 
         x = F.max_unpool2d(x, idx_1, 2, stride=2)
+        x = F.dropout(x, p=0.4)
         x = torch.cat((identity, x), 1)
+        x = F.dropout(x, p=0.4)
         x = self.block_8(x)
 
         return x
@@ -72,18 +74,25 @@ class ResidualBlock(nn.Module):
     def forward(self, inputs):
         residual = self.residual(inputs)
         x = self.features(residual)
-        return self.relu(residual + x)
+        x = residual + x
+        x = self.relu(x)
+        return x
 
 
 if __name__ == '__main__':
     x = torch.rand(1,3,256,256)
+    net = IM2HI()
+    out = net(x)
+    
+    out = torch.squeeze(out, 0)
+    img = tfunc.to_pil_image(out)
+    img = tfunc.to_tensor(img)
+    img = torch.cat((img, img, img))
+    plt.imshow(img.permute(1,2,0))
+    plt.show()
 
-    model = IM2HI()
-    out = model(x)
-    print(out.shape)
-    # print(out)
-    summary(model, (3,256,256))
+    # summary(net, (3,256,256))
 
-    # model_parameters = filter(lambda p: p.requires_grad, model.parameters())
+    # model_parameters = filter(lambda p: p.requires_grad, net.parameters())
     # params = sum([np.prod(p.size()) for p in model_parameters])
     # print(params)

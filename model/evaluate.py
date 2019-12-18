@@ -2,16 +2,18 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from model.metric import ssim, SSIM
+import time
+from tqdm import tqdm
 
-
-def evaluate(net, testloader, model_name='im2height'):
+def evaluate(net,testloader, criterion='',model_name='im2height'):
     use_gpu = torch.cuda.is_available()
     device  = 'cuda:0' if use_gpu else 'cpu'
     if use_gpu:
         print('Using CUDA')
-        net.cuda()
+        # net.cuda()
 
-    data_size = len(testloader)
+    data_size = 500
+    print(data_size)
     since = time.time()
 
     running_loss = 0.0
@@ -37,4 +39,4 @@ def evaluate(net, testloader, model_name='im2height'):
     epoch_ssim = running_ssim / data_size
 
     print('{} -> Loss: {:.4f} SSIM: {:.4f}'.format('Evaluate', epoch_loss, epoch_ssim))
-    print('\ttime', time.time() - start)
+    print('\ttime', time.time() - since)
