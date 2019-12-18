@@ -5,36 +5,28 @@ from model.helper.utils import EarlyStopping
 from model.dataloader import trainloader, validloader
 import time
 from tqdm import tqdm
-from model.metric import ssim, SSIM
+from model.metric import ssim
 from torch.utils.tensorboard import SummaryWriter
+from datatime import datetime, date
 
 
-def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate=1e-4, comment='comment'):
+def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model_name='im2height', learning_rate=1e-4, comment='comment'):
     use_gpu = torch.cuda.is_available()
     device  = 'cuda:0' if use_gpu else 'cpu'
     if use_gpu:
         print('Using CUDA')
-        net.cuda()
+        # net.cuda()
     
     train_size = len(dataloader['train'])
     valid_size = len(dataloader['val'])
 
     since = time.time()
+    now = date.today().strftime('%d-%m-%Y_') + datetime.now().strftime('%H:%M:%S')
 
-    train_writer = SummaryWriter(log_dir='logs-tensorboard/train', comment='-'+comment)
-    val_writer = SummaryWriter(log_dir='logs-tensorboard/val', comment='-'+comment)
-    ssim_writer = SummaryWriter(log_dir='logs-tensorboard/ssim', comment='-'+comment)
-    es = EarlyStopping(mode='max', patience=10)
-
-    criterion = nn.L1Loss()
-    # optimizer = optim.SGD(net.parameters(), 
-                            # lr=learning_rate, 
-                            # momentum=0.9, 
-                            # nesterov=True, 
-                            # weight_decay=1e-1)
-    optimizer = optim.Adam(net.parameters(), 
-                           lr=learning_rate, 
-                           weight_decay=1e-1)
+    train_writer = SummaryWriter(log_dir='logs-tensorboard/%s/train' % now, comment='-'+comment)
+    val_writer = SummaryWriter(log_dir='logs-tensorboard/%s/val' % now, comment='-'+comment)
+    ssim_writer = SummaryWriter(log_dir='logs-tensorboard/%s/ssim' % now, comment='-'+comment)
+    es = EarlyStopping(mode='max', patience=5)
 
     best_ssim = 0.0
     
