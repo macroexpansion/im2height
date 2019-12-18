@@ -68,7 +68,7 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
                     # m_ssim += ssim_value.item()
                     if phase == 'train' and i % 20 == 0:
                         ssim_writer.add_scalar('loss %s' % str(epoch), loss.item(), i)
-                        ssim_writer.add_scalar('ssim %s' % str(epoch), ssim.item(), i)
+                        ssim_writer.add_scalar('ssim %s' % str(epoch), ssim_value.item(), i)
                         m_loss, m_ssim = 0, 0
                 
                     if phase == 'train':
