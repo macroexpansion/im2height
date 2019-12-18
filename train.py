@@ -19,4 +19,4 @@ dataloader = {
 net = IM2HI()
 # print(net)
 # print(net.parameters())
-train(net, dataloader, learning_rate=1e-4, model_name='im2height', comment=comment)
+train(net, dataloader, learning_rate=1e-5, model_name='im2height_augment', comment=comment)

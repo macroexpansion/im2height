@@ -23,17 +23,26 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
 
     train_writer = SummaryWriter(log_dir='logs-tensorboard/train', comment='-'+comment)
     val_writer = SummaryWriter(log_dir='logs-tensorboard/val', comment='-'+comment)
+    ssim_writer = SummaryWriter(log_dir='logs-tensorboard/ssim', comment='-'+comment)
     es = EarlyStopping(mode='max', patience=10)
 
     criterion = nn.L1Loss()
-    optimizer = optim.Adam(net.parameters(), lr=learning_rate)
+    # optimizer = optim.SGD(net.parameters(), 
+                            # lr=learning_rate, 
+                            # momentum=0.9, 
+                            # nesterov=True, 
+                            # weight_decay=1e-1)
+    optimizer = optim.Adam(net.parameters(), 
+                           lr=learning_rate, 
+                           weight_decay=1e-1)
 
     best_ssim = 0.0
+    
     for epoch in range(num_epochs):
         start = time.time()
         print("Epoch {}/{}".format(epoch, num_epochs))
         print('-' * 10)
-
+        
         for phase in ['train', 'val']:
             if phase == 'train':
                 net.train()
@@ -42,7 +51,9 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
 
             running_loss = 0.0
             running_ssim = 0.0
-
+            
+            m_loss, m_ssim = (0, 0)
+            i = 0
             for image, mask in tqdm(dataloader[phase]):
                 image = image.to(device)
                 mask = mask.to(device)
@@ -52,11 +63,18 @@ def train(net, dataloader, num_epochs=100, model_name='im2height', learning_rate
                     output = net(image)
                     loss = criterion(output, mask)
                     ssim_value = ssim(output, mask)
-
+                    
+                    # m_loss += loss.item()
+                    # m_ssim += ssim_value.item()
+                    if phase == 'train' and i % 20 == 0:
+                        ssim_writer.add_scalar('loss %s' % str(epoch), loss.item(), i)
+                        ssim_writer.add_scalar('ssim %s' % str(epoch), ssim.item(), i)
+                        m_loss, m_ssim = 0, 0
+                
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
-
+                i += 1
                 running_loss += loss.item() * image.size(0)
                 running_ssim += ssim_value.item()
 
