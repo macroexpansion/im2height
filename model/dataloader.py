@@ -2,44 +2,30 @@ import matplotlib.pyplot as plt
 import cv2
 import os 
 import numpy as np
-import seaborn as sns
-from sklearn.model_selection import train_test_split
-from torchvision.datasets import ImageFolder
+# import seaborn as sns
+# from sklearn.model_selection import train_test_split
+from skimage.exposure import equalize_adapthist
 from torchvision import transforms
 import torchvision.transforms.functional as tfunc
 from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import DataLoader, Dataset
 import torch
 import random
-from im2hi import IM2HI
-from metric import ssim
 from PIL import Image
 
 
-def datacounter(root='pkm/train/'):
-    classes = ['bulbasaur', 'charmander', 'jigglypuff', 'magikarp', 'mudkip', 'pikachu', 'psyduck', 'snorlax', 'squirtle']
-    X, y = [], []
-    for index, clsname in enumerate(classes):
-        imgpath = os.path.join(root, clsname)
-        for path in os.listdir(imgpath):
-            imgfile = os.path.join(imgpath, path)
-            X.append(imgfile)
-            y.append(index)
-    return X, y
-
-
-def dataplot(y_train, y_test):    
-    f, axes = plt.subplots(1, 2, figsize=(18, 6))
-    ax1, ax2 = axes
-    sns.countplot(y_train, ax=ax1)
-    ax1.set_xlabel('train')
-    ax1.set_ylabel('number')
-    ax1.set_ylim([0, 200])
-    sns.countplot(y_test, ax=ax2)
-    ax2.set_xlabel('test')
-    ax2.set_ylabel('number')
-    ax2.set_ylim([0, 200])
-    plt.show()
+# def dataplot(y_train, y_test):    
+#     f, axes = plt.subplots(1, 2, figsize=(18, 6))
+#     ax1, ax2 = axes
+#     sns.countplot(y_train, ax=ax1)
+#     ax1.set_xlabel('train')
+#     ax1.set_ylabel('number')
+#     ax1.set_ylim([0, 200])
+#     sns.countplot(y_test, ax=ax2)
+#     ax2.set_xlabel('test')
+#     ax2.set_ylabel('number')
+#     ax2.set_ylim([0, 200])
+#     plt.show()
 
 
 class RemoteImageDataset(Dataset):
@@ -132,20 +118,36 @@ def testloader(colab=False, batch_size=1, augment=False):
 
 
 if __name__ == '__main__':
-    net = IM2HI()
-    net.load_state_dict(torch.load('im2height.pt', map_location=torch.device('cpu')))
+    from im2hi import IM2HI
+    from unet import UNet
+    from metric import ssim
+    
+    net = UNet()
+    net.load_state_dict(torch.load('weights/unet_augment.pt', map_location=torch.device('cpu')))
+
+    # net = IM2HI()
+    # net.load_state_dict(torch.load('weights/im2height_augment.pt', map_location=torch.device('cpu')))
+
     net.eval()
 
     data = trainloader()
     data = iter(data)
-    for i in range(14):
+    for i in range(5):
         img, mask = data.next()
 
     with torch.set_grad_enabled(False):
-        output = net(img)
+        equal = torch.squeeze(img, 0).permute(1,2,0)
+        equal = equalize_adapthist(equal)
+        equal = torch.from_numpy(equal).permute(2,0,1)
+        equal = torch.unsqueeze(equal, 0)
+
+        output = net(equal)
+        
         print(ssim(output, mask))
-        print(torch.nn.L1Loss()(output, mask))
-        print(torch.nn.MSELoss()(output, mask))
+        print('l1', torch.nn.L1Loss()(output, mask))
+        print('l2', torch.nn.MSELoss()(output, mask))
+        # print('none l1', torch.nn.L1Loss(reduction='none')(output, mask))
+        # print('none l2', torch.nn.MSELoss(reduction='none')(output, mask))
         output = torch.squeeze(output, 0)
         output = torch.cat((output, output, output))
 
@@ -153,7 +155,7 @@ if __name__ == '__main__':
     mask = torch.cat((mask, mask, mask))
 
     
-    fig, (a1, a2,a3) = plt.subplots(1,3, figsize=(15,5))
+    fig, (a1, a2,a3) = plt.subplots(1, 3, figsize=(15,5))
     a1.imshow(img.permute(1,2,0))
     a2.imshow(mask.permute(1,2,0))
     a3.imshow(output.permute(1,2,0))

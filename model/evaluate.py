@@ -13,7 +13,6 @@ def evaluate(net,testloader, criterion='',model_name='im2height'):
         # net.cuda()
 
     data_size = 500
-    print(data_size)
     since = time.time()
 
     running_loss = 0.0
@@ -30,7 +29,7 @@ def evaluate(net,testloader, criterion='',model_name='im2height'):
             ssim_value = ssim(output, mask)
 
         running_loss += loss.item() * image.size(0)
-        running_ssim += ssim_value.item()
+        running_ssim += ssim_value.item() * image.size(0)
 
         del image, mask, output
         torch.cuda.empty_cache()

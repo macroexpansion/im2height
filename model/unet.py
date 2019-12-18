@@ -1,10 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 
 class UNet(nn.Module):
-    def __init__(self, n_channels, n_classes, bilinear=True):
+    def __init__(self, n_channels=3, n_classes=1, bilinear=True):
         super(UNet, self).__init__()
         self.n_channels = n_channels
         self.n_classes = n_classes
@@ -96,8 +97,11 @@ class OutConv(nn.Module):
 
 
 if __name__ == '__main__':
-    net = UNet(256, 1)
+    from torchsummary import summary
+
+    net = UNet(3, 1)
 
     test = torch.rand(1,3,256,256)
-    out = net(test)
-    print(out.size())
+    # out = net(test)
+    # print(out.size())
+    summary(net, (3,256,256))

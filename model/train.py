@@ -29,7 +29,8 @@ def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model
     es = EarlyStopping(mode='max', patience=5)
 
     best_ssim = 0.0
-    
+
+    scheduler = MultiStepLR(optimizer, milestones=[10,30], gamma=0.1)
     for epoch in range(num_epochs):
         start = time.time()
         print("Epoch {}/{}".format(epoch, num_epochs))
@@ -44,7 +45,6 @@ def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model
             running_loss = 0.0
             running_ssim = 0.0
             
-            m_loss, m_ssim = (0, 0)
             i = 0
             for image, mask in tqdm(dataloader[phase]):
                 image = image.to(device)
@@ -56,29 +56,27 @@ def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model
                     loss = criterion(output, mask)
                     ssim_value = ssim(output, mask)
                     
-                    # m_loss += loss.item()
-                    # m_ssim += ssim_value.item()
                     if phase == 'train':
-                        ssim_writer.add_scalar('loss %s' % str(epoch), loss.item(), i)
-                        ssim_writer.add_scalar('ssim %s' % str(epoch), ssim_value.item(), i)
-                        # m_loss, m_ssim = 0, 0
-                
-                    # if phase == 'train':
                         loss.backward()
                         optimizer.step()
+
+                        ssim_writer.add_scalar('loss %s' % str(epoch), loss.item(), i)
+                        ssim_writer.add_scalar('ssim %s' % str(epoch), ssim_value.item(), i)
+                
                 i += 1
-                # print(image.size(0))
-                running_loss += loss.item() * image.size(0)
+                running_loss += loss_.item() * image.size(0)
                 running_ssim += ssim_value.item() * image.size(0)
 
                 del image, mask, output
                 torch.cuda.empty_cache()
 
+            if phase == 'train':
+                scheduler.step()
             data_size = train_size if phase == 'train' else valid_size
             epoch_loss = running_loss / data_size
             epoch_ssim = running_ssim / data_size
 
-            print('{} -> Loss: {:.4f} SSIM: {:.4f}'.format(phase, epoch_loss, epoch_ssim))
+            print('{} -> Loss: {:.7f} SSIM: {:.7f}'.format(phase, epoch_loss, epoch_ssim))
             print('\ttime', time.time() - start)
 
             if phase == 'train':
@@ -94,12 +92,12 @@ def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model
                     time_elapsed = time.time() - since
                     print('Early Stopping')
                     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
-                    print('Best val ssim: {:4f}'.format(best_ssim))
+                    print('Best val ssim: {:7f}'.format(best_ssim))
                     return
 
                 if epoch_ssim > best_ssim:
                     best_ssim = epoch_ssim
-                    print('Update best loss: {:4f}'.format(best_ssim))
+                    print('Update best loss: {:7f}'.format(best_ssim))
                     torch.save(net.state_dict(), '{}.pt'.format(model_name))
                 
 

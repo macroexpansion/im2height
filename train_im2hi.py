@@ -5,13 +5,12 @@ from model.dataloader import trainloader, validloader
 from torchvision import transforms
 from model.helper.utils import Logger
 
-comment = 'im2hi_augment'
+comment = 'im2hi_loss'
 logger = Logger('im2hi', comment=comment) # save important files each runs
 
-COLAB = False
+COLAB = True
 BATCH_SIZE = 16
 AUGMENT = True
-LR = 1e-5
 
 dataloader = {
     'train': trainloader(colab=COLAB, batch_size=BATCH_SIZE, augment=AUGMENT), 
@@ -29,12 +28,15 @@ criterion = torch.nn.L1Loss()
                         # nesterov=True, 
                         # weight_decay=1e-1)
 optimizer = torch.optim.Adam(net.parameters(), 
-                       lr=2e-5, 
-                       weight_decay=1e-1)
+                       lr=2e-5,
+                       weight_decay=1e-2)
 
 train(net, dataloader, 
       criterion=criterion,
       optimizer=optimizer,
-      num_epochs=100,
-      model_name='im2height_augment', 
+      num_epochs=200,
+      model_name='im2height_loss', 
       comment=comment)
+
+
+# unet1: valid 0.724712 test 0.6318
