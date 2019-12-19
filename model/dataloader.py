@@ -154,6 +154,7 @@ if __name__ == '__main__':
     a1.imshow(img.permute(1,2,0))
     a2.imshow(mask.permute(1,2,0))
     a3.imshow(output.permute(1,2,0))
+    plt.axis('off')
     plt.show()
 
     # for img, mask in iter(data):
