@@ -10,7 +10,7 @@ comment = 'unet_augment'
 logger = Logger('unet', comment=comment) # save important files each runs
 
 COLAB = False
-BATCH_SIZE = 16
+BATCH_SIZE = 1
 AUGMENT = True
 LR = 1e-5
 

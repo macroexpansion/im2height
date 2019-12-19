@@ -5,7 +5,7 @@ from model.evaluate import evaluate
 import torch
 
 COLAB = True
-BATCH_SIZE = 16
+BATCH_SIZE = 1
 PATH = 'unet_augment.pt'
 # PATH = '../drive/My Drive/Colab Notebooks/im2height.pt'
 

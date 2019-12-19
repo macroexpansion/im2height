@@ -48,7 +48,7 @@ class IM2HI(nn.Module):
         x = F.max_unpool2d(x, idx_1, 2, stride=2)
         x = F.dropout(x, p=0.4)
         x = torch.cat((identity, x), 1)
-        x = F.dropout(x, p=0.4)
+        # x = F.dropout(x, p=0.4)
         x = self.block_8(x)
 
         return x

@@ -5,12 +5,15 @@ from model.helper.utils import EarlyStopping
 from model.dataloader import trainloader, validloader
 import time
 from tqdm import tqdm
-from model.metric import ssim
+from model.metric import ssim, SSIM
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime, date
+from torch.optim.lr_scheduler import MultiStepLR
 
 
 def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model_name='im2height', learning_rate=1e-4, comment='comment'):
+    ssim_criterion = SSIM()
+
     use_gpu = torch.cuda.is_available()
     device  = 'cuda:0' if use_gpu else 'cpu'
     if use_gpu:
@@ -30,7 +33,7 @@ def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model
 
     best_ssim = 0.0
 
-    scheduler = MultiStepLR(optimizer, milestones=[10,30], gamma=0.1)
+    scheduler = MultiStepLR(optimizer, milestones=[10], gamma=0.1)
     for epoch in range(num_epochs):
         start = time.time()
         print("Epoch {}/{}".format(epoch, num_epochs))
@@ -53,7 +56,9 @@ def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model
                 optimizer.zero_grad()
                 with torch.set_grad_enabled(phase == 'train'):
                     output = net(image)
-                    loss = criterion(output, mask)
+                    # loss = criterion(output, mask)
+                    mask.requires_grad = False
+                    loss = 1 - ssim_criterion(output, mask)
                     ssim_value = ssim(output, mask)
                     
                     if phase == 'train':
@@ -64,7 +69,7 @@ def train(net, dataloader, criterion=None, optimizer=None, num_epochs=100, model
                         ssim_writer.add_scalar('ssim %s' % str(epoch), ssim_value.item(), i)
                 
                 i += 1
-                running_loss += loss_.item() * image.size(0)
+                running_loss += loss.item() * image.size(0)
                 running_ssim += ssim_value.item() * image.size(0)
 
                 del image, mask, output

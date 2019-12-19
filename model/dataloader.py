@@ -123,25 +123,20 @@ if __name__ == '__main__':
     from metric import ssim
     
     net = UNet()
-    net.load_state_dict(torch.load('weights/unet_augment.pt', map_location=torch.device('cpu')))
+    net.load_state_dict(torch.load('weights/unet_final.pt', map_location=torch.device('cpu')))
 
     # net = IM2HI()
     # net.load_state_dict(torch.load('weights/im2height_augment.pt', map_location=torch.device('cpu')))
 
     net.eval()
 
-    data = trainloader()
+    data = testloader()
     data = iter(data)
-    for i in range(5):
+    for i in range(3):
         img, mask = data.next()
 
     with torch.set_grad_enabled(False):
-        equal = torch.squeeze(img, 0).permute(1,2,0)
-        equal = equalize_adapthist(equal)
-        equal = torch.from_numpy(equal).permute(2,0,1)
-        equal = torch.unsqueeze(equal, 0)
-
-        output = net(equal)
+        output = net(img)
         
         print(ssim(output, mask))
         print('l1', torch.nn.L1Loss()(output, mask))

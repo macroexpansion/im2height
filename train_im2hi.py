@@ -9,7 +9,7 @@ comment = 'im2hi_loss'
 logger = Logger('im2hi', comment=comment) # save important files each runs
 
 COLAB = True
-BATCH_SIZE = 16
+BATCH_SIZE = 1
 AUGMENT = True
 
 dataloader = {
@@ -39,4 +39,6 @@ train(net, dataloader,
       comment=comment)
 
 
-# unet1: valid 0.724712 test 0.6318
+# unet1: valid 0.724712, test 0.6318, batch 16, lr=2e-5, weight decay=1e-2, l1loss
+# unet ssim loss test 66.45 batch 16, lr=2e-5, weight decay=1e-2, 
+# unet l2 loss test 22.37 batch 16 lr=2e-5, weight decay=1e-2
